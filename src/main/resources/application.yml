@@ -1,0 +1,27 @@
+server:
+  port: 8080
+
+spring:
+  webflux:
+    multipart:
+      max-in-memory-size: 4MB
+  data:
+    mongodb:
+      uri: mongodb://mongo:27017/proxycache
+  datasource:
+    url: jdbc:postgresql://postgres:5432/proxydb
+    username: proxyuser
+    password: proxypass
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+logging:
+  level:
+    root: INFO
+    org.springframework.web: DEBUG
+

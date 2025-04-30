@@ -1,0 +1,29 @@
+services:
+  proxy-app:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - mongo
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/proxydb
+      SPRING_DATASOURCE_USERNAME: proxyuser
+      SPRING_DATASOURCE_PASSWORD: proxypass
+      SPRING_DATA_MONGODB_URI: mongodb://mongo:27017/proxycache
+
+  postgres:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_DB: proxydb
+      POSTGRES_USER: proxyuser
+      POSTGRES_PASSWORD: proxypass
+    ports:
+      - "5432:5432"
+
+  mongo:
+    image: mongo:6
+    restart: always
+    ports:
+      - "27017:27017"

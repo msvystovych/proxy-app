@@ -1,0 +1,13 @@
+package org.company;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import reactor.tools.agent.ReactorDebugAgent;
+
+@SpringBootApplication
+public class Main {
+    public static void main(String[] args) {
+        ReactorDebugAgent.init();
+        SpringApplication.run(Main.class, args);
+    }
+}
