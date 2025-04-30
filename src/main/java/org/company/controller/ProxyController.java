@@ -2,6 +2,9 @@ package org.company.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.company.exception.InternalProxyException;
+import org.company.exception.UpstreamClientException;
+import org.company.exception.UpstreamServerException;
 import org.company.model.RequestResponseEntity;
 import org.company.repository.RequestResponseRepository;
 import org.company.service.CacheService;
@@ -42,8 +45,12 @@ public class ProxyController {
             saveRequestResponse(path, headers, modifiedHtml);
             return Mono.just(modifiedHtml);
         }).onErrorResume(ex -> {
-            log.error("Failed fetching external content for path: {}", path, ex);
-            return Mono.error(new ProxyException("Failed to proxy path: " + path));
+            if (ex instanceof UpstreamClientException ||
+                    ex instanceof UpstreamServerException) {
+                return Mono.error(ex); // propagate upstream status
+            }
+            log.error("Unhandled proxy error for path {}: {}", path, ex.getMessage());
+            return Mono.error(new InternalProxyException("Internal proxy error", ex));
         }));
     }
 

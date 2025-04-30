@@ -1,72 +1,49 @@
 package org.company.service;
 
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.io.buffer.DataBuffer;
+import org.company.exception.UpstreamClientException;
+import org.company.exception.UpstreamServerException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ProxyService {
 
-    private final WebClient webClient;
-
-    public ProxyService(@Qualifier("proxyWebClient") WebClient webClient) {
-        this.webClient = webClient;
-    }
+    private final WebClient proxyWebClient;
 
     /**
-     * Fetches HTML page from upstream as String
+     * Fetch HTML page from upstream.
      */
     public Mono<String> fetchExternalContent(String path) {
-        return webClient.get().uri(path).accept(MediaType.TEXT_HTML).retrieve().onStatus(HttpStatusCode::is4xxClientError, clientResponse -> {
-            log.warn("4xx error received from upstream for path: {}", path);
-            return Mono.error(new UpstreamException("Upstream 4xx for path: " + path));
-        }).onStatus(HttpStatusCode::is5xxServerError, clientResponse -> {
-            log.error("5xx error received from upstream for path: {}", path);
-            return Mono.error(new UpstreamException("Upstream 5xx for path: " + path));
-        }).bodyToMono(String.class).doOnError(WebClientResponseException.class, ex -> {
-            log.error("WebClient error when fetching path: {}, status: {}", path, ex.getStatusCode(), ex);
-        }).doOnError(ex -> {
-            log.error("Unexpected error fetching path: {}", path, ex);
-        });
+        return proxyWebClient.get()
+                .uri(path)
+                .retrieve()
+                .onStatus(HttpStatusCode::is4xxClientError, response -> {
+                            HttpStatus status = HttpStatus.valueOf(response.statusCode().value());
+                            log.warn("Upstream returned 4xx for path {}: {}", path, status);
+                            return Mono.error(new UpstreamClientException(status, "Upstream returned 4xx"));
+                        })
+                .onStatus(HttpStatusCode::is5xxServerError, response -> {
+                            HttpStatus status = HttpStatus.valueOf(response.statusCode().value());
+                            log.error("Upstream returned 5xx for path {}: {}", path, status);
+                            return Mono.error(new UpstreamServerException(status, "Upstream returned 5xx"));
+                        })
+                .bodyToMono(String.class);
     }
 
     /**
-     * Fetches any static resource from upstream (images, js, css) as raw DataBuffer
-     */
-    public Mono<DataBuffer> fetchStaticResource(String path) {
-        return webClient.get().uri(path).accept(MediaType.ALL).retrieve().onStatus(statusCode -> statusCode.is4xxClientError(), clientResponse -> {
-            log.warn("4xx error received for static resource: {}", path);
-            return Mono.error(new UpstreamException("Upstream 4xx for static resource: " + path));
-        }).onStatus(statusCode -> statusCode.is5xxServerError(), clientResponse -> {
-            log.error("5xx error received for static resource: {}", path);
-            return Mono.error(new UpstreamException("Upstream 5xx for static resource: " + path));
-        }).bodyToMono(DataBuffer.class).doOnError(WebClientResponseException.class, ex -> {
-            log.error("WebClient error for static resource: {}, status: {}", path, ex.getStatusCode(), ex);
-        }).doOnError(ex -> {
-            log.error("Unexpected error fetching static resource: {}", path, ex);
-        });
-    }
-
-    /**
-     * Simple utility to detect if a path is "probably" static content
+     * Simple file-type filter for static resources.
      */
     public boolean isStaticResource(String path) {
         if (path == null) return false;
         String lower = path.toLowerCase();
-        return lower.endsWith(".js") || lower.endsWith(".css") || lower.endsWith(".png") || lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".gif") || lower.endsWith(".svg") || lower.endsWith(".ico") || lower.endsWith(".woff") || lower.endsWith(".woff2") || lower.endsWith(".ttf") || lower.endsWith(".eot") || lower.endsWith(".otf");
-    }
-
-    public static class UpstreamException extends RuntimeException {
-        public UpstreamException(String message) {
-            super(message);
-        }
+        return lower.matches(".*\\.(js|css|png|jpg|jpeg|svg|ico|gif|woff2?|ttf|eot|otf)$");
     }
 }
