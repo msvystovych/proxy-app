@@ -8,6 +8,11 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.Map;
 
+/**
+ * Service for saving request and response data.
+ * <p>
+ * This service interacts with the RequestResponseRepository to store request and response data.
+ */
 @Service
 @AllArgsConstructor
 public class RequestResponseService {

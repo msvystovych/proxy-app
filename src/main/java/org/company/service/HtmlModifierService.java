@@ -10,6 +10,10 @@ import org.springframework.stereotype.Service;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Service to modify HTML content by adding a trademark symbol to six-letter words
+ * and rewriting internal links.
+ */
 @Service
 public class HtmlModifierService {
 

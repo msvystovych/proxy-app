@@ -11,6 +11,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+/*
+  ProxyService is responsible for fetching content from an external service.
+  It uses WebClient to make HTTP GET requests and handles the response status codes.
+  If the response indicates a client-side (4xx) or server-side (5xx) error,
+  it logs the error and throws a custom exception.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -19,7 +25,13 @@ public class ProxyService {
     private final WebClient proxyWebClient;
 
     /**
-     * Fetch HTML page from upstream.
+     * Fetches the content from an external service via the specified path.
+     * Handles response status codes for client-side and server-side errors, logging appropriately
+     * and throwing custom exceptions when such errors are encountered.
+     *
+     * @param path the URL path to fetch the content from
+     * @return a {@code Mono<String>} emitting the content of the response body on success
+     *         or propagating an error if the external service returns 4xx or 5xx status codes
      */
     public Mono<String> fetchExternalContent(String path) {
         return proxyWebClient.get()
@@ -36,14 +48,5 @@ public class ProxyService {
                             return Mono.error(new UpstreamServerException(status, "Upstream returned 5xx"));
                         })
                 .bodyToMono(String.class);
-    }
-
-    /**
-     * Simple file-type filter for static resources.
-     */
-    public boolean isStaticResource(String path) {
-        if (path == null) return false;
-        String lower = path.toLowerCase();
-        return lower.matches(".*\\.(js|css|png|jpg|jpeg|svg|ico|gif|woff2?|ttf|eot|otf)$");
     }
 }

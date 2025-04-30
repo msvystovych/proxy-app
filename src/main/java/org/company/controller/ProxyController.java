@@ -9,6 +9,7 @@ import org.company.service.CacheService;
 import org.company.service.HtmlModifierService;
 import org.company.service.ProxyService;
 import org.company.service.RequestResponseService;
+import org.company.util.UrlUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +19,10 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 
+/**
+ * ProxyController handles incoming requests and proxies them to an external service.
+ * It modifies the HTML response, caches it, and saves request/response data.
+ */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -32,7 +37,7 @@ public class ProxyController {
 
     @GetMapping("/**")
     public Mono<String> proxy(ServerWebExchange exchange, @RequestHeader Map<String, String> headers) {
-        String path = extractPath(exchange);
+        String path = UrlUtils.extractPath(exchange);
 
         log.info("Received proxy request for path: {}", path);
 
@@ -51,17 +56,5 @@ public class ProxyController {
     }
 
 
-    private String extractPath(ServerWebExchange exchange) {
-        String fullPath = exchange.getRequest().getURI().getPath(); // e.g., /proxy/spring3/
-        String contextPath = exchange.getRequest().getPath().contextPath().value(); // usually ""
 
-        String mappingPath = "/proxy";
-
-        if (fullPath.startsWith(contextPath + mappingPath)) {
-            String extracted = fullPath.substring((contextPath + mappingPath).length());
-            return extracted.isEmpty() ? "/" : extracted;
-        } else {
-            return "/";
-        }
-    }
 }

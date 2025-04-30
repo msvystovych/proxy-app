@@ -8,6 +8,12 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 
+/*
+ * Service for caching modified HTML pages.
+ * <p>
+ * This service interacts with the CachedPageRepository to store and retrieve cached HTML pages.
+ * It uses a TTL of 10 minutes for cached entries.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor

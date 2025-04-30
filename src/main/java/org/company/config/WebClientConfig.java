@@ -5,6 +5,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
+/**
+ * Configuration class for setting up a WebClient with custom settings.
+ * This WebClient is used to make HTTP requests to external services.
+ */
 @Configuration
 public class WebClientConfig {
 
