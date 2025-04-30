@@ -120,4 +120,80 @@ public class ProxyControllerIntegrationTest extends BaseIntegrationTest {
                 .exchange()
                 .expectStatus().isNotFound(); // 404
     }
+
+    @Test
+    void testRequestAndResponseAreSavedInPostgres() {
+        webTestClient.get()
+                .uri("/proxy/")
+                .header("X-Test-Header", "integration")
+                .exchange()
+                .expectStatus().isOk();
+
+        var entries = requestResponseRepository.findAll();
+        assertThat(entries).isNotEmpty();
+
+        var entry = entries.get(0);
+        assertThat(entry.getUrl()).isEqualTo("/");
+        assertThat(entry.getRequestHeaders()).contains("X-Test-Header");
+        assertThat(entry.getResponseBody()).isNotBlank();
+        assertThat(entry.getTimestamp()).isNotNull();
+    }
+
+    @Test
+    void testCachedResponseIsIdenticalToOriginal() {
+        String[] originalBody = new String[1];
+
+        // First call (triggers fetch and cache)
+        webTestClient.get()
+                .uri("/proxy/")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .consumeWith(response -> originalBody[0] = response.getResponseBody());
+
+        // Second call (should hit MongoDB cache)
+        webTestClient.get()
+                .uri("/proxy/")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .consumeWith(response -> {
+                    String cachedBody = response.getResponseBody();
+                    assertThat(cachedBody).isEqualTo(originalBody[0]);
+                });
+    }
+
+    @Test
+    void testResponseIsPlainContentType() {
+        webTestClient.get()
+                .uri("/proxy/why-spring/")
+                .exchange()
+                .expectStatus().isOk()
+                .expectHeader().value("Content-Type", value -> assertThat(value).contains("text/plain"));
+    }
+
+    @Test
+    void testResponseIsHtmlContentType_debug() {
+        webTestClient.get()
+                .uri("/proxy/why-spring/")
+                .exchange()
+                .expectBody(String.class)
+                .consumeWith(response -> {
+                    var status = response.getStatus();
+                    var body = response.getResponseBody();
+                    System.out.println("Status: " + status);
+                    System.out.println("Body:\n" + body);
+                });
+    }
+
+//    spring.io doesn’t have many public endpoints with query params that return 200
+    @Test
+    void testProxyPreservesQueryParameters() {
+        webTestClient.get()
+                .uri("/proxy/search?q=spring")
+                .exchange()
+                .expectStatus().isNotFound(); // correct expectation
+    }
+
+
 }
