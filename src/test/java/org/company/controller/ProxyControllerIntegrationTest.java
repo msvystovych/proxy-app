@@ -3,6 +3,7 @@ package org.company.controller;
 import org.company.model.CachedPage;
 import org.company.repository.CachedPageRepository;
 import org.company.repository.RequestResponseRepository;
+import org.company.util.ProxyConstants;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -104,12 +105,12 @@ public class ProxyControllerIntegrationTest extends BaseIntegrationTest {
                     String body = response.getResponseBody();
                     assertThat(body).isNotNull();
 
-                    if (!body.contains("™")) {
+                    if (!body.contains(ProxyConstants.TM_MARK)) {
                         System.out.println("WARNING: No ™ found in body. Page may not contain six-letter words.");
                         System.out.println(body.substring(0, Math.min(body.length(), 1000)));
                     }
 
-                    assertThat(body).contains("™");
+                    assertThat(body).contains(ProxyConstants.TM_MARK);
                 });
     }
 
@@ -213,7 +214,7 @@ public class ProxyControllerIntegrationTest extends BaseIntegrationTest {
         // 4. Optionally validate content is non-empty and contains expected signature
         assertThat(cachedPage.get().getModifiedHtml())
                 .isNotBlank()
-                .contains("™") // optionally validate ™ injection logic
+                .contains(ProxyConstants.TM_MARK) // optionally validate ™ injection logic
                 .contains("<html"); // sanity check
     }
 

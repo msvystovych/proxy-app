@@ -1,6 +1,7 @@
 package org.company.service;
 
 
+import org.company.util.ProxyConstants;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -57,7 +58,7 @@ public class HtmlModifierService {
         Matcher matcher = WORD_PATTERN.matcher(text);
         StringBuffer result = new StringBuffer();
         while (matcher.find()) {
-            matcher.appendReplacement(result, matcher.group() + "™");
+            matcher.appendReplacement(result, matcher.group() + ProxyConstants.TM_MARK);
         }
         matcher.appendTail(result);
         return result.toString();
