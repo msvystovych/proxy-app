@@ -42,7 +42,7 @@ public class ProxyController {
         log.info("Received proxy request for path: {}", path);
 
         return cacheService.getCachedPage(path).switchIfEmpty(proxyService.fetchExternalContent(path).flatMap(originalHtml -> {
-            String modifiedHtml = htmlModifierService.modifyHtml(originalHtml, path);
+            String modifiedHtml = htmlModifierService.modifyHtml(originalHtml);
             cacheService.cachePage(path, modifiedHtml);
             requestResponseService.saveRequestResponse(path, headers, modifiedHtml);
             return Mono.just(modifiedHtml);

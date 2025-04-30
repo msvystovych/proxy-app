@@ -5,58 +5,89 @@ import org.company.util.ProxyConstants;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Service to modify HTML content by adding a trademark symbol to six-letter words
- * and rewriting internal links.
- */
 @Service
 public class HtmlModifierService {
 
-    private static final Pattern WORD_PATTERN = Pattern.compile("\\b\\w{6}\\b");
+    private static final Pattern SIX_LETTER_WORD_PATTERN = Pattern.compile("\\b\\w{6}\\b");
 
-    public String modifyHtml(String html, String path) {
+    /**
+     * Modifies the HTML content by:
+     * 1. Adding a trademark symbol (™) to each six-letter word.
+     * 2. Rewriting internal links to go through the proxy.
+     *
+     * @param html The original HTML content.
+     * @return The modified HTML content.
+     */
+    public String modifyHtml(String html) {
         Document doc = Jsoup.parse(html);
 
-        modifyTextNodes(doc);
+        // Modify visible text content
+        modifyTextNodes(doc.body());
+
+        // Rewrite internal navigation links
         rewriteInternalLinks(doc);
 
         return doc.outerHtml();
     }
 
-    private void modifyTextNodes(Document document) {
-        for (TextNode textNode : document.textNodes()) {
-            String updatedText = addTrademarkToSixLetterWords(textNode.text());
-            textNode.text(updatedText);
+    /**
+     * Recursively modifies all text nodes in the document body
+     */
+    private void modifyTextNodes(Node node) {
+        for (Node child : node.childNodes()) {
+            if (child instanceof TextNode textNode) {
+                String updatedText = addTrademarkToSixLetterWords(textNode.text());
+                textNode.text(updatedText);
+            } else {
+                modifyTextNodes(child);
+            }
         }
     }
 
+    /**
+     * Rewrites internal links (href, src) to go through the proxy
+     */
     private void rewriteInternalLinks(Document document) {
-        for (Element element : document.select("[href], [src]")) {
+        Elements elements = document.select("[href], [src]");
+        for (Element element : elements) {
             String attr = element.hasAttr("href") ? "href" : "src";
             String url = element.attr(attr);
+
             if (isInternalLink(url)) {
                 element.attr(attr, "/proxy" + normalizeUrl(url));
             }
         }
     }
 
+    /**
+     * Detects internal links (e.g., "/spring3/"), skips "//" and external domains
+     */
     private boolean isInternalLink(String url) {
         return url.startsWith("/") && !url.startsWith("//");
     }
 
+    /**
+     * Ensures the link is prefixed with a single slash (avoids //double)
+     */
     private String normalizeUrl(String url) {
         return url.startsWith("/") ? url : "/" + url;
     }
 
+    /**
+     * Adds ™ to each six-letter word in the given text
+     */
     private String addTrademarkToSixLetterWords(String text) {
-        Matcher matcher = WORD_PATTERN.matcher(text);
-        StringBuffer result = new StringBuffer();
+        Matcher matcher = SIX_LETTER_WORD_PATTERN.matcher(text);
+        StringBuilder result = new StringBuilder();
+
         while (matcher.find()) {
             matcher.appendReplacement(result, matcher.group() + ProxyConstants.TM_MARK);
         }
