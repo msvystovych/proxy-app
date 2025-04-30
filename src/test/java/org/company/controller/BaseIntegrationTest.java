@@ -9,7 +9,9 @@ import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
+@Testcontainers
 public class BaseIntegrationTest {
 
     @Container
