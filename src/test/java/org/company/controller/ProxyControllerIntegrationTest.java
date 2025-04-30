@@ -9,10 +9,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -43,7 +45,6 @@ public class ProxyControllerIntegrationTest {
         registry.add("spring.datasource.password", postgresContainer::getPassword);
     }
 
-    @Autowired
     private WebTestClient webTestClient;
 
     @Autowired
@@ -52,10 +53,24 @@ public class ProxyControllerIntegrationTest {
     @Autowired
     private RequestResponseRepository requestResponseRepository;
 
+    @LocalServerPort
+    private int port;
+
     @BeforeEach
     void setup() {
         cachedPageRepository.deleteAll().block(); // Clean MongoDB cache
         requestResponseRepository.deleteAll();    // Clean Postgres requests
+
+        int bufferSize = 4 * 1024 * 1024; // 4MB
+
+        ExchangeStrategies strategies = ExchangeStrategies.builder()
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(bufferSize))
+                .build();
+
+        this.webTestClient = WebTestClient.bindToServer()
+                .baseUrl("http://localhost:" + port)
+                .exchangeStrategies(strategies)
+                .build();
     }
 
     @Test
@@ -75,7 +90,7 @@ public class ProxyControllerIntegrationTest {
     @Test
     void testProxySubpage() {
         webTestClient.get()
-                .uri("/proxy/spring3/")
+                .uri("/proxy/why-spring/")
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody(String.class)
