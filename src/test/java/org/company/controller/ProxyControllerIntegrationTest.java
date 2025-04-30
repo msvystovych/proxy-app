@@ -195,5 +195,27 @@ public class ProxyControllerIntegrationTest extends BaseIntegrationTest {
                 .expectStatus().isNotFound(); // correct expectation
     }
 
+    @Test
+    void testWritesToCacheAfterProxyRequest() {
+        // 1. Ensure cache is empty
+        assertThat(cachedPageRepository.findById("/why-spring/").blockOptional()).isEmpty();
+
+        // 2. Trigger proxy request (which should write to cache)
+        webTestClient.get()
+                .uri("/proxy/why-spring/")
+                .exchange()
+                .expectStatus().isOk();
+
+        // 3. Assert cache entry exists
+        var cachedPage = cachedPageRepository.findById("/why-spring/").blockOptional();
+        assertThat(cachedPage).isPresent();
+
+        // 4. Optionally validate content is non-empty and contains expected signature
+        assertThat(cachedPage.get().getModifiedHtml())
+                .isNotBlank()
+                .contains("™") // optionally validate ™ injection logic
+                .contains("<html"); // sanity check
+    }
+
 
 }
