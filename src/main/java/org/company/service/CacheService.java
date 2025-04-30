@@ -40,6 +40,9 @@ public class CacheService {
         page.setModifiedHtml(modifiedHtml);
         page.setCreatedAt(Instant.now());
 
-        cachedPageRepository.save(page).doOnSuccess(saved -> log.info("Cached page for path: {}", path)).doOnError(error -> log.error("Failed to cache page for path: {}", path, error)).subscribe(); // Non-blocking fire-and-forget
+        cachedPageRepository.save(page).doOnSuccess(saved ->
+                log.info("Cached page for path: {}", path))
+                .doOnError(error -> log.error("Failed to cache page for path: {}", path, error))
+                .subscribe(); // Non-blocking fire-and-forget
     }
 }

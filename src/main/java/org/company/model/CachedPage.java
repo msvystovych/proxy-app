@@ -17,6 +17,6 @@ public class CachedPage {
 
     private String modifiedHtml;
 
-    @Indexed(expireAfterSeconds = 600) // 10 minutes TTL
+    @Indexed(expireAfter = "PT10M") // 10 minutes TTL
     private Instant createdAt;
 }
