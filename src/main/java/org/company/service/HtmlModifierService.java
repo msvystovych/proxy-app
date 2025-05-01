@@ -81,7 +81,7 @@ public class HtmlModifierService {
      */
     private String addTrademarkToSixLetterWords(String text) {
         Matcher matcher = SIX_LETTER_WORD_PATTERN.matcher(text);
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
 
         while (matcher.find()) {
             matcher.appendReplacement(result, matcher.group() + ProxyConstants.TM_MARK);

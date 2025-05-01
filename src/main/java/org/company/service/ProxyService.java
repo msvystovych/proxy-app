@@ -35,7 +35,7 @@ public class ProxyService {
      */
     public Mono<String> fetchExternalContent(String path) {
         return proxyWebClient.get()
-                .uri(path)
+                .uri(uriBuilder -> uriBuilder.path(path).build())
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError, response -> {
                             HttpStatus status = HttpStatus.valueOf(response.statusCode().value());
@@ -47,6 +47,7 @@ public class ProxyService {
                             log.error("Upstream returned 5xx for path {}: {}", path, status);
                             return Mono.error(new UpstreamServerException(status, "Upstream returned 5xx"));
                         })
-                .bodyToMono(String.class);
+                .bodyToMono(String.class)
+                .doOnNext(html -> log.info("Fetched content: {}", html.substring(0, Math.min(200, html.length()))));
     }
 }
