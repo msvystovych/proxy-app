@@ -1,6 +1,6 @@
 services:
   proxy-app:
-    build: .
+    image: ghcr.io/msvystovych/proxy-app:latest
     ports:
       - "8080:8080"
     depends_on:
