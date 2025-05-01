@@ -3,23 +3,18 @@ package org.company.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.company.model.CachedPage;
+import org.company.repository.CachedPageRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 
-/*
- * Service for caching modified HTML pages.
- * <p>
- * This service interacts with the CachedPageRepository to store and retrieve cached HTML pages.
- * It uses a TTL of 10 minutes for cached entries.
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class CacheService {
 
-    private final org.company.repository.CachedPageRepository cachedPageRepository;
+    private final CachedPageRepository cachedPageRepository;
 
     /**
      * Retrieves the cached modified HTML for the given path if available.
@@ -28,10 +23,13 @@ public class CacheService {
      * @return Mono of modified HTML if cache hit, empty if cache miss
      */
     public Mono<String> getCachedPage(String path) {
-        return cachedPageRepository.findById(path).map(CachedPage::getModifiedHtml).doOnNext(html -> log.info("Cache hit for path: {}", path)).switchIfEmpty(Mono.defer(() -> {
-            log.info("Cache miss for path: {}", path);
-            return Mono.empty();
-        }));
+        return cachedPageRepository.findById(path)
+                .map(CachedPage::getModifiedHtml)
+                .doOnNext(html -> log.info("Cache hit for path: {}", path))
+                .switchIfEmpty(Mono.defer(() -> {
+                    log.info("Cache miss for path: {}", path);
+                    return Mono.empty();
+                }));
     }
 
     /**
@@ -39,16 +37,24 @@ public class CacheService {
      *
      * @param path         the URL path (e.g., "/spring3/")
      * @param modifiedHtml the modified HTML content
+     * @return Mono<Void> to allow reactive chaining
      */
-    public void cachePage(String path, String modifiedHtml) {
+    public Mono<Void> cachePage(String path, String modifiedHtml) {
         CachedPage page = new CachedPage();
         page.setUrl(path);
         page.setModifiedHtml(modifiedHtml);
         page.setCreatedAt(Instant.now());
 
-        cachedPageRepository.save(page).doOnSuccess(saved ->
-                log.info("Cached page for path: {}", path))
+        return cachedPageRepository.save(page)
+                .doOnSuccess(saved -> log.info("Cached page for path: {}", path))
                 .doOnError(error -> log.error("Failed to cache page for path: {}", path, error))
-                .subscribe(); // Non-blocking fire-and-forget
+                .then();
+    }
+
+    /**
+     * Fire-and-forget call for production use
+     */
+    public void cachePageAsync(String path, String modifiedHtml) {
+        cachePage(path, modifiedHtml).subscribe();
     }
 }

@@ -7,11 +7,12 @@ spring:
       max-in-memory-size: 4MB
   data:
     mongodb:
-      uri: mongodb://mongo:27017/proxycache
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://localhost:27017/proxycache}
+
   datasource:
-    url: jdbc:postgresql://postgres:5432/proxydb
-    username: proxyuser
-    password: proxypass
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/proxydb}
+    username: ${SPRING_DATASOURCE_USERNAME:proxyuser}
+    password: ${SPRING_DATASOURCE_PASSWORD:proxypass}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -24,4 +25,3 @@ logging:
   level:
     root: INFO
     org.springframework.web: DEBUG
-
