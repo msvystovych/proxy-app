@@ -1,29 +1,29 @@
-# ────────────────────────────────────────────────
-# Stage 1: Build with Maven
-# ────────────────────────────────────────────────
 FROM maven:3.9.5-eclipse-temurin-17 AS builder
 
 WORKDIR /app
 
-# Copy project files
+# Copy only pom.xml and download dependencies first (leverages Docker cache)
 COPY pom.xml .
+RUN mvn dependency:go-offline -B
+
+# Copy source code and build the app
 COPY src ./src
+RUN mvn clean package -DskipTests -B
 
-# Build the application (skip tests for Docker build)
-RUN mvn clean package -DskipTests
 
-# ────────────────────────────────────────────────
-# Stage 2: Runtime with lightweight JRE
-# ────────────────────────────────────────────────
 FROM eclipse-temurin:17-jre
+
+# Use non-root user for security
+RUN useradd -ms /bin/bash spring
+USER spring
 
 WORKDIR /app
 
-# Copy the fat JAR from build stage
-COPY --from=builder /app/target/*.jar app.jar
+# Copy only the final fat JAR (avoid *.jar pattern)
+COPY --from=builder /app/target/*-SNAPSHOT.jar app.jar
 
-# Expose app port (if Spring Boot default)
+# Expose default Spring Boot port
 EXPOSE 8080
 
-# Run Spring Boot app
+# Run Spring Boot
 ENTRYPOINT ["java", "-jar", "app.jar"]
