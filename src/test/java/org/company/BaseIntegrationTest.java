@@ -1,4 +1,4 @@
-package org.company.controller;
+package org.company;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.boot.test.web.server.LocalServerPort;

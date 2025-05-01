@@ -1,5 +1,6 @@
 package org.company.controller;
 
+import org.company.BaseIntegrationTest;
 import org.company.model.CachedPage;
 import org.company.repository.CachedPageRepository;
 import org.company.repository.RequestResponseRepository;
