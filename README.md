@@ -26,6 +26,9 @@ The application will be available at http://localhost:8080
 docker-compose up -d
 The application will be available at http://localhost:8080
 
+=================Docker Image=================
+DOCKER IMAGE: https://github.com/users/msvystovych/packages/container/proxy-app/versions
+
 
 =================Usage=================
 
