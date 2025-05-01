@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import org.company.model.RequestResponseEntity;
 import org.company.repository.RequestResponseRepository;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.Map;
@@ -19,12 +20,13 @@ public class RequestResponseService {
     private final RequestResponseRepository requestResponseRepository;
 
 
-    public void saveRequestResponse(String path, Map<String, String> headers, String responseBody) {
+    public Mono<RequestResponseEntity> saveRequestResponse(String path, Map<String, String> headers, String body) {
         RequestResponseEntity entity = new RequestResponseEntity();
         entity.setUrl(path);
         entity.setRequestHeaders(headers.toString());
-        entity.setResponseBody(responseBody);
+        entity.setResponseBody(body);
         entity.setTimestamp(Instant.now());
-        requestResponseRepository.save(entity);
+
+        return Mono.just(requestResponseRepository.save(entity));
     }
 }

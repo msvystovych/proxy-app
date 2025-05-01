@@ -41,20 +41,26 @@ public class ProxyController {
 
         log.info("Received proxy request for path: {}", path);
 
-        return cacheService.getCachedPage(path).switchIfEmpty(proxyService.fetchExternalContent(path).flatMap(originalHtml -> {
-            String modifiedHtml = htmlModifierService.modifyHtml(originalHtml);
-            cacheService.cachePage(path, modifiedHtml);
-            requestResponseService.saveRequestResponse(path, headers, modifiedHtml);
-            return Mono.just(modifiedHtml);
-        }).onErrorResume(ex -> {
-            if (ex instanceof UpstreamClientException || ex instanceof UpstreamServerException) {
-                return Mono.error(ex); // propagate upstream status
-            }
-            log.error("Unhandled proxy error for path {}: {}", path, ex.getMessage());
-            return Mono.error(new InternalProxyException("Internal proxy error", ex));
-        }));
-    }
+        return cacheService.getCachedPage(path)
+                .switchIfEmpty(
+                        proxyService.fetchExternalContent(path)
+                                .flatMap(originalHtml -> {
+                                    String modifiedHtml = htmlModifierService.modifyHtml(originalHtml);
 
+                                    return Mono.when(
+                                            cacheService.cachePage(path, modifiedHtml),
+                                            requestResponseService.saveRequestResponse(path, headers, modifiedHtml)
+                                    ).thenReturn(modifiedHtml);
+                                })
+                )
+                .onErrorResume(ex -> {
+                    if (ex instanceof UpstreamClientException || ex instanceof UpstreamServerException) {
+                        return Mono.error(ex);
+                    }
+                    log.error("Unhandled proxy error for path {}: {}", path, ex.getMessage());
+                    return Mono.error(new InternalProxyException("Internal proxy error", ex));
+                });
+    }
 
 
 }
