@@ -22,13 +22,15 @@
     </properties>
 
     <dependencies>
+        <!-- Native DNS support for Mac -->
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-resolver-dns-native-macos</artifactId>
             <version>4.2.0.Final</version>
             <classifier>osx-aarch_64</classifier>
         </dependency>
-        <!-- Spring Boot -->
+
+        <!-- Spring Boot WebFlux -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
@@ -50,7 +52,7 @@
             <artifactId>postgresql</artifactId>
         </dependency>
 
-        <!-- HTML parsing -->
+        <!-- HTML Parser -->
         <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
@@ -85,27 +87,21 @@
             </exclusions>
         </dependency>
 
+        <!-- Reactor Test -->
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-test</artifactId>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.junit.vintage</groupId>
-                    <artifactId>junit-vintage-engine</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
-
-        <!-- WebFlux test support -->
+        <!-- WebFlux Test Support -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-test-autoconfigure</artifactId>
             <scope>test</scope>
         </dependency>
 
-        <!-- Testcontainers (Mongo + Postgres + JUnit Jupiter) -->
+        <!-- Testcontainers Core -->
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -130,7 +126,7 @@
 
     <build>
         <plugins>
-            <!-- Spring Boot Maven Plugin -->
+            <!-- Spring Boot Plugin -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -144,7 +140,7 @@
                 </executions>
             </plugin>
 
-            <!-- Compiler Plugin -->
+            <!-- Maven Compiler -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -154,6 +150,34 @@
                     <target>${java.version}</target>
                     <parameters>true</parameters>
                 </configuration>
+            </plugin>
+
+            <!-- Surefire Plugin: Unit Tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <parallel>none</parallel>
+                </configuration>
+            </plugin>
+
+            <!-- Failsafe Plugin: Integration Tests -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <parallel>none</parallel>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
