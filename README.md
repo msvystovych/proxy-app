@@ -23,6 +23,7 @@ Run the application:
 The application will be available at http://localhost:8080
 
 =================Running with Docker Compose=================
+
 docker-compose up -d
 The application will be available at http://localhost:8080
 
