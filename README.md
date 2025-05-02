@@ -39,9 +39,9 @@ To proxy a request to an external service, use the following URL format:
 http://localhost:8080/proxy/{path}
 Where {path} is the path to the resource on the external service.
 
-For example, to proxy a request to https://example.com/page.html, use:
+For example, to proxy a request to https://spring.io/microservices, use:
 
-http://localhost:8080/proxy/page.html
+http://localhost:8080/proxy/microservices
 
 =================Configuration=================
 
